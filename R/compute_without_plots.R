@@ -17,8 +17,9 @@
 #@author Alessandro Barberis
 ######################################################################################
 .compute_without_plots = function(gene_sigs_list, mRNA_expr_matrix,names_sigs=NULL,names_datasets=NULL , covariates=NULL, thresholds=NULL, out_dir = file.path('~', "sigQC"), showResults = FALSE,origin=NULL){
-
-  dir.create(out_dir)
+  if(!dir.exists(out_dir)){
+      dir.create(out_dir,recursive=T)
+  }
   # utils::write.table('',file=file.path(out_dir, "log.log"))
   #LOG file path
   logfile.path = file.path(out_dir, "log.log")
@@ -369,7 +370,9 @@ make_radar_chart_loc_noplots <- function(radar_plot_values,showResults = FALSE,n
   #then we output the legend
 
   #output the radarchart table to file
-  dir.create(file.path(out_dir,'radarchart_table'))
+  if(!dir.exists(file.path(out_dir,'radarchart_table'))){
+    dir.create(file.path(out_dir,'radarchart_table'))
+  }
 
   #the following creates the radarplot rownames
   radarplot_rownames <- c()

@@ -173,99 +173,159 @@ eval_struct_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix,names_da
         }    
       }
   }
-  if(grDevices::dev.cur()!=1){
-    g<- grDevices::dev.off() #closes graphics device
-  }
+  # if(grDevices::dev.cur()!=1){
+  #   g<- grDevices::dev.off() #closes graphics device
+  # }
 
   # draw.heatmaps(hmaps,names)
-
-  #creates new plot
-  grDevices::dev.new()
   
-  graphics::par(cex.main=0.8,cex.lab = 0.8,oma=c(4,2,2,2),mar=c(4,4,4,4)) #sets graphics parameters
+  #---------before we do the biclustering plotting, let's determine whether there are ANY biclusters among the datasets/sig combo
 
-  hmaps <- lapply(1:(length(names_datasets)* length(names_sigs)),function(i) {
-    #here we define a list of heatmaps for binarized biclustering data
-    #first convert the index i to an array index for the grid size length(names_datasets) by length(names_sigs)
-    dataset_ind <- i %% length(names_datasets)
-    if (dataset_ind == 0 ){
-      dataset_ind <- length(names_datasets)
+  save_bicluster <- FALSE
+
+  for (i in 1:(length(names_datasets)* length(names_sigs))){
+      #here we compute all the biclusters
+
+      #first convert the index i to an array index for the grid size length(names_datasets) by length(names_sigs)
+      dataset_ind <- i %% length(names_datasets)
+      if (dataset_ind == 0 ){
+        dataset_ind <- length(names_datasets)
+      }
+      sig_ind <- ceiling(i/length(names_datasets))
+      gene_sig <- gene_sigs_list[[names_sigs[sig_ind]]]
+
+      if(is.matrix(gene_sig)){gene_sig = as.vector(gene_sig);}
+
+      data.matrix = mRNA_expr_matrix[[names_datasets[dataset_ind]]] #load the data
+
+      inter = intersect(gene_sig, row.names(data.matrix)) #only consider the genes present in the dataset
+
+      sig_scores <- as.matrix(data.matrix[inter,])
+      sig_scores[!is.finite(sig_scores)] <- NA #make sure the scores aren't infinte
+
+      #need to standardize here the matrix before binarizing
+      for (gene in inter){
+        sig_scores[gene,] <- (as.numeric(sig_scores[gene,]) - mean(as.numeric(sig_scores[gene,]),na.rm=T)) / stats::sd(as.numeric(sig_scores[gene,]),na.rm=T)
+      }
+
+      #the following does the binarization of the matrix
+      threshold <- min(stats::na.omit(t(sig_scores)))+(max(stats::na.omit(t(sig_scores)))-min(stats::na.omit(t(sig_scores))))/2
+      x <- stats::na.omit(t(sig_scores)) #> threshold) * 1
+      x[x<=threshold] <- 0
+      x[x>threshold] <- 1
+     
+      #the following if statement creates the parameters for the biclustering algorithm; namely the number of columns to take in each
+      #repetition of the biclustering algorithm (we use BCCC) - this is dependent on the size of the matrix
+
+      if (dim(sig_scores)[2] > 40) {
+        num_cols_chosen <- 20
+      }else if (dim(sig_scores)[2] > 20){
+        num_cols_chosen <- 10
+      }else if (dim(sig_scores)[2] > 10){
+        num_cols_chosen <- 5
+      }else{
+        num_cols_chosen <- 2
+      }
+
+      # Xmotif <- biclust(x, method=BCXmotifs(), number=50, alpha=0.5, nd=floor(dim(sig_scores)/num_cols_chosen), ns=num_cols_chosen, sd=floor(dim(sig_scores)/num_cols_chosen))
+      Xmotif <- biclust::biclust(x, method=biclust::BCCC(), delta=1,alpha=1.5, number=50)# alpha=0.5, nd=floor(dim(sig_scores)/num_cols_chosen), ns=num_cols_chosen, sd=floor(dim(sig_scores)/num_cols_chosen))
+      #the above performs the biclustering
+
+      #if more than 1 bicluster then save_bicluster is true, otherwise false
+      if(Xmotif@Number > 1){
+        save_bicluster = TRUE
+      }
     }
-    sig_ind <- ceiling(i/length(names_datasets))
-    gene_sig <- gene_sigs_list[[names_sigs[sig_ind]]]
-    if(is.matrix(gene_sig)){gene_sig = as.vector(gene_sig);}
-    data.matrix = mRNA_expr_matrix[[names_datasets[dataset_ind]]] #load the data
-    inter = intersect(gene_sig, row.names(data.matrix)) #only consider the genes present in the dataset
-    sig_scores <- as.matrix(data.matrix[inter,])
-    sig_scores[!is.finite(sig_scores)] <- NA #make sure the scores aren't infinte
 
-    #need to standardize here the matrix before binarizing
-    for (gene in inter){
-      sig_scores[gene,] <- (as.numeric(sig_scores[gene,]) - mean(as.numeric(sig_scores[gene,]),na.rm=T)) / stats::sd(as.numeric(sig_scores[gene,]),na.rm=T)
+  #-----------------------------------------------------------------------------------------------------
+
+  if(save_bicluster){
+    #creates new plot
+    grDevices::dev.new()
+    
+    graphics::par(cex.main=0.8,cex.lab = 0.8,oma=c(4,2,2,2),mar=c(4,4,4,4)) #sets graphics parameters
+
+    hmaps <- lapply(1:(length(names_datasets)* length(names_sigs)),function(i) {
+      #here we define a list of heatmaps for binarized biclustering data
+      #first convert the index i to an array index for the grid size length(names_datasets) by length(names_sigs)
+      dataset_ind <- i %% length(names_datasets)
+      if (dataset_ind == 0 ){
+        dataset_ind <- length(names_datasets)
+      }
+      sig_ind <- ceiling(i/length(names_datasets))
+      gene_sig <- gene_sigs_list[[names_sigs[sig_ind]]]
+      if(is.matrix(gene_sig)){gene_sig = as.vector(gene_sig);}
+      data.matrix = mRNA_expr_matrix[[names_datasets[dataset_ind]]] #load the data
+      inter = intersect(gene_sig, row.names(data.matrix)) #only consider the genes present in the dataset
+      sig_scores <- as.matrix(data.matrix[inter,])
+      sig_scores[!is.finite(sig_scores)] <- NA #make sure the scores aren't infinte
+
+      #need to standardize here the matrix before binarizing
+      for (gene in inter){
+        sig_scores[gene,] <- (as.numeric(sig_scores[gene,]) - mean(as.numeric(sig_scores[gene,]),na.rm=T)) / stats::sd(as.numeric(sig_scores[gene,]),na.rm=T)
+      }
+
+      #the following does the binarization of the matrix
+       threshold <- min(stats::na.omit(t(sig_scores)))+(max(stats::na.omit(t(sig_scores)))-min(stats::na.omit(t(sig_scores))))/2
+      x <- stats::na.omit(t(sig_scores)) #> threshold) * 1
+      x[x<=threshold] <- 0
+      x[x>threshold] <- 1
+      # print(paste0('thresh ',threshold))
+      # x <- biclust::binarize(stats::na.omit(t(sig_scores)))#discretize(stats::na.omit(t(sig_scores)),nof=10,quant=F)
+
+      #the following if statement creates the parameters for the biclustering algorithm; namely the number of columns to take in each
+      #repetition of the biclustering algorithm (we use BCCC) - this is dependent on the size of the matrix
+
+      if (dim(sig_scores)[2] > 40) {
+        num_cols_chosen <- 20
+      }else if (dim(sig_scores)[2] > 20){
+        num_cols_chosen <- 10
+
+      }else if (dim(sig_scores)[2] > 10){
+        num_cols_chosen <- 5
+      }else{
+        num_cols_chosen <- 2
+      }
+
+      # Xmotif <- biclust(x, method=BCXmotifs(), number=50, alpha=0.5, nd=floor(dim(sig_scores)/num_cols_chosen), ns=num_cols_chosen, sd=floor(dim(sig_scores)/num_cols_chosen))
+      Xmotif <- biclust::biclust(x, method=biclust::BCCC(), delta=1,alpha=1.5, number=50)# alpha=0.5, nd=floor(dim(sig_scores)/num_cols_chosen), ns=num_cols_chosen, sd=floor(dim(sig_scores)/num_cols_chosen))
+      #the above performs the biclustering
+      #if more than 1 bicluster then we output the heatmap with the bicluster on it
+      #otherwise we just output the empty title
+      if(Xmotif@Number > 1){
+        biclust::heatmapBC(stats::na.omit(t(sig_scores)),bicResult=Xmotif,col = gplots::colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
+        #	biclust::heatmapBC(x,bicResult=Xmotif,col = colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
+
+        graphics::title(paste0('\n \n \nBivariate clustering\n',names_datasets[dataset_ind],' ',names_sigs[sig_ind]),cex=min(1,4*10/max_title_length))
+        graphics::axis(1,at=1:length(rownames(sig_scores)), labels=rownames(sig_scores),las=2,tck=0,cex.axis=0.6)
+        #mtext(rownames(sig_scores))
+        # }else if (Xmotif@Number == 1){
+        # 	biclust::heatmapBC(stats::na.omit(t(sig_scores)),bicResult=Xmotif,number=1,col = colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
+      }else{
+        #print(paste0("Zero or one co-clusters found: ", names[i]))
+        graphics::plot.new()
+        graphics::title(paste0('\n\n\n <=1 bivariate clusters for\n',names_datasets[dataset_ind],' ',names_sigs[sig_ind]),cex=min(1,4*10/max_title_length))
+        cat(paste0('<= 1 bi-clusters found for: ', names_datasets[dataset_ind],' ',names_sigs[sig_ind],'\n'), file=file)
+
+      }
+      grab_grob() #grab the heatmap or empty title and add it to the list of heatmaps that will be plotted
+    })
+
+    draw.heatmaps(hmaps,names_datasets,names_sigs) #this draws the heatmaps list in a grid
+    #saves the biclustering datas
+    grDevices::dev.copy(grDevices::pdf,file.path(out_dir,'sig_eval_bivariate_clustering.pdf'),width=4*(length(names_datasets)),height=4*(length(names_sigs)))
+    cat('Bi-clustering completed successfully\n', file=file)
+
+    if(grDevices::dev.cur()!=1){
+      g<- grDevices::dev.off() #closes graphics device
     }
-
-    #the following does the binarization of the matrix
-     threshold <- min(stats::na.omit(t(sig_scores)))+(max(stats::na.omit(t(sig_scores)))-min(stats::na.omit(t(sig_scores))))/2
-    x <- stats::na.omit(t(sig_scores)) #> threshold) * 1
-    x[x<=threshold] <- 0
-    x[x>threshold] <- 1
-    # print(paste0('thresh ',threshold))
-    # x <- biclust::binarize(stats::na.omit(t(sig_scores)))#discretize(stats::na.omit(t(sig_scores)),nof=10,quant=F)
-
-    #the following if statement creates the parameters for the biclustering algorithm; namely the number of columns to take in each
-    #repetition of the biclustering algorithm (we use BCCC) - this is dependent on the size of the matrix
-
-    if (dim(sig_scores)[2] > 40) {
-      num_cols_chosen <- 20
-    }else if (dim(sig_scores)[2] > 20){
-      num_cols_chosen <- 10
-
-    }else if (dim(sig_scores)[2] > 10){
-      num_cols_chosen <- 5
-    }else{
-      num_cols_chosen <- 2
-    }
-
-    # Xmotif <- biclust(x, method=BCXmotifs(), number=50, alpha=0.5, nd=floor(dim(sig_scores)/num_cols_chosen), ns=num_cols_chosen, sd=floor(dim(sig_scores)/num_cols_chosen))
-    Xmotif <- biclust::biclust(x, method=biclust::BCCC(), delta=1,alpha=1.5, number=50)# alpha=0.5, nd=floor(dim(sig_scores)/num_cols_chosen), ns=num_cols_chosen, sd=floor(dim(sig_scores)/num_cols_chosen))
-    #the above performs the biclustering
-    #if more than 1 bicluster then we output the heatmap with the bicluster on it
-    #otherwise we just output the empty title
-    if(Xmotif@Number > 1){
-      biclust::heatmapBC(stats::na.omit(t(sig_scores)),bicResult=Xmotif,col = gplots::colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
-      #	biclust::heatmapBC(x,bicResult=Xmotif,col = colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
-
-      graphics::title(paste0('\n \n \nBivariate clustering\n',names_datasets[dataset_ind],' ',names_sigs[sig_ind]),cex=min(1,4*10/max_title_length))
-      graphics::axis(1,at=1:length(rownames(sig_scores)), labels=rownames(sig_scores),las=2,tck=0,cex.axis=0.6)
-      #mtext(rownames(sig_scores))
-      # }else if (Xmotif@Number == 1){
-      # 	biclust::heatmapBC(stats::na.omit(t(sig_scores)),bicResult=Xmotif,number=1,col = colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
-    }else{
-      #print(paste0("Zero or one co-clusters found: ", names[i]))
-      graphics::plot.new()
-      graphics::title(paste0('\n\n\n <=1 bivariate clusters for\n',names_datasets[dataset_ind],' ',names_sigs[sig_ind]),cex=min(1,4*10/max_title_length))
-      cat(paste0('<= 1 bi-clusters found for: ', names_datasets[dataset_ind],' ',names_sigs[sig_ind],'\n'), file=file)
-
-    }
-    grab_grob() #grab the heatmap or empty title and add it to the list of heatmaps that will be plotted
-  })
-
-  draw.heatmaps(hmaps,names_datasets,names_sigs) #this draws the heatmaps list in a grid
-  #saves the biclustering datas
-  grDevices::dev.copy(grDevices::pdf,file.path(out_dir,'sig_eval_bivariate_clustering.pdf'),width=4*(length(names_datasets)),height=4*(length(names_sigs)))
-  cat('Bi-clustering completed successfully\n', file=file)
-
-  if(grDevices::dev.cur()!=1){
-    g<- grDevices::dev.off() #closes graphics device
+  }else{
+    cat(paste0('Bi-clustering completed successfully. No bi-clusters found among signature/dataset combinations.\n'),file=file)
   }
-  #same thing, but with binarized heatmaps (not the exact heatmaps) underneath the clustering
-  #create a new graphics object
-  grDevices::dev.new()
-  
-  # pdf(file.path(out_dir,'sig_eval_bivariate_clustering_binarized_maps.pdf'),width=10,height=10)
-
-  graphics::par(cex.main=0.8,cex.lab = 0.8,oma=c(4,2,2,2),mar=c(4,4,4,4)) #set graphics parameters
-  hmaps <- lapply(1:(length(names_datasets) * length(names_sigs)),function(i) {
+ #----------------------------------------------------------------------------------------------
+ #---------before we do the binarized biclustering plotting, let's determine whether there are ANY biclusters among the datasets/sig combo
+ save_bicluster = FALSE
+ for (i in 1:(length(names_datasets) * length(names_sigs))){
 
     #convert index i into an array index for the grid of heatmaps
     dataset_ind <- i %% length(names_datasets)
@@ -304,29 +364,89 @@ eval_struct_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix,names_da
     # following performs the biclustering
     # Xmotif <- biclust(x, method=BCXmotifs(), number=50, alpha=0.5, nd=floor(dim(sig_scores)/num_cols_chosen), ns=num_cols_chosen, sd=floor(dim(sig_scores)/num_cols_chosen))
     Xmotif <- biclust::biclust(x, method=biclust::BCCC(), delta=1,alpha=1.5, number=50)
-    #if there is more then 1 bicluster then will output the heatmap, otherwise will output an empty plot with title only
+    #if there is more then 1 bicluster then will output the heatmap, otherwise not
     if(Xmotif@Number > 1){
-      #biclust::heatmapBC(stats::na.omit(t(sig_scores)),bicResult=Xmotif,col = colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
-      biclust::heatmapBC(x,bicResult=Xmotif,col = gplots::colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
-
-      graphics::title(paste0('\n \n \nBivariate clustering\n',names_datasets[dataset_ind],' ',names_sigs[sig_ind]),cex=min(1,4*10/max_title_length))
-      graphics::axis(1,at=1:length(rownames(sig_scores)), labels=rownames(sig_scores),las=2,tck=0,cex.axis=0.6)
-      #mtext(rownames(sig_scores))
-      # }else if (Xmotif@Number == 1){
-      # 	biclust::heatmapBC(stats::na.omit(t(sig_scores)),bicResult=Xmotif,number=1,col = colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
-    }else{
-      # print(paste0("Zero or one co-clusters found: ", names[i]))
-      graphics::plot.new()
-      graphics::title(paste0('\n\n\n <=1 bivariate clusters for\n',names_datasets[dataset_ind],' ',names_sigs[sig_ind]),cex=min(1,4*10/max_title_length))
+      save_bicluster = TRUE
+     
     }
-    grab_grob() #outputs the graphics object to the list
-  })
+  }
+ #----------------------------------------------------------------------------------------------
+  #same thing, but with binarized heatmaps (not the exact heatmaps) underneath the clustering
+  #create a new graphics object
+  if(save_bicluster){
+    grDevices::dev.new()
 
-  draw.heatmaps(hmaps,names_datasets,names_sigs) #draws the heatmaps
-  # the following saves the file
-  grDevices::dev.copy(grDevices::pdf,file.path(out_dir,'sig_eval_bivariate_clustering_binarized_maps.pdf'),width=4*(length(names_datasets)),height=4*(length(names_sigs)))
+    # pdf(file.path(out_dir,'sig_eval_bivariate_clustering_binarized_maps.pdf'),width=10,height=10)
+
+    graphics::par(cex.main=0.8,cex.lab = 0.8,oma=c(4,2,2,2),mar=c(4,4,4,4)) #set graphics parameters
+    hmaps <- lapply(1:(length(names_datasets) * length(names_sigs)),function(i) {
+
+      #convert index i into an array index for the grid of heatmaps
+      dataset_ind <- i %% length(names_datasets)
+      if (dataset_ind == 0 ){
+        dataset_ind <- length(names_datasets)
+      }
+      sig_ind <- ceiling(i/length(names_datasets))
+      gene_sig <- gene_sigs_list[[names_sigs[sig_ind]]]
+      if(is.matrix(gene_sig)){gene_sig = as.vector(gene_sig);}
+      data.matrix = mRNA_expr_matrix[[names_datasets[dataset_ind]]] #load the data
+      inter = intersect(gene_sig, row.names(data.matrix)) #consider only genes present in both cases
+
+      sig_scores <- as.matrix(data.matrix[inter,])
+      sig_scores[!is.finite(sig_scores)] <- NA #make sure the data is finite
+      #standardise by z-transform
+      for (gene in inter){
+        sig_scores[gene,] <- (as.numeric(sig_scores[gene,]) - mean(as.numeric(sig_scores[gene,]),na.rm=T)) / stats::sd(as.numeric(sig_scores[gene,]),na.rm=T)
+      }
+      #binarize the matrix
+      threshold <- min(stats::na.omit(t(sig_scores)))+(max(stats::na.omit(t(sig_scores)))-min(stats::na.omit(t(sig_scores))))/2
+      x <- stats::na.omit(t(sig_scores)) #> threshold) * 1
+      x[x<=threshold] <- 0
+      x[x>threshold] <- 1
+      # x <- biclust::binarize(stats::na.omit(t(sig_scores)))#discretize(stats::na.omit(t(sig_scores)),nof=10,quant=F)
+      #the following if statement helps to decide the parameters for the BCCC algorithm for biclustering
+
+      if (dim(sig_scores)[2] > 40) {
+        num_cols_chosen <- 20
+      }else if (dim(sig_scores)[2] > 20){
+        num_cols_chosen <- 10
+      }else if (dim(sig_scores)[2] > 10){
+        num_cols_chosen <- 5
+      }else{
+        num_cols_chosen <- 2
+      }
+      # following performs the biclustering
+      # Xmotif <- biclust(x, method=BCXmotifs(), number=50, alpha=0.5, nd=floor(dim(sig_scores)/num_cols_chosen), ns=num_cols_chosen, sd=floor(dim(sig_scores)/num_cols_chosen))
+      Xmotif <- biclust::biclust(x, method=biclust::BCCC(), delta=1,alpha=1.5, number=50)
+      #if there is more then 1 bicluster then will output the heatmap, otherwise will output an empty plot with title only
+      if(Xmotif@Number > 1){
+        #biclust::heatmapBC(stats::na.omit(t(sig_scores)),bicResult=Xmotif,col = colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
+        biclust::heatmapBC(x,bicResult=Xmotif,col = gplots::colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
+
+        graphics::title(paste0('\n \n \nBivariate clustering\n',names_datasets[dataset_ind],' ',names_sigs[sig_ind]),cex=min(1,4*10/max_title_length))
+        graphics::axis(1,at=1:length(rownames(sig_scores)), labels=rownames(sig_scores),las=2,tck=0,cex.axis=0.6)
+        #mtext(rownames(sig_scores))
+        # }else if (Xmotif@Number == 1){
+        # 	biclust::heatmapBC(stats::na.omit(t(sig_scores)),bicResult=Xmotif,number=1,col = colorpanel(100,"blue","white","red"), xlab='Gene ID',ylab='Sample')
+      }else{
+        # print(paste0("Zero or one co-clusters found: ", names[i]))
+        graphics::plot.new()
+        graphics::title(paste0('\n\n\n <=1 bivariate clusters for\n',names_datasets[dataset_ind],' ',names_sigs[sig_ind]),cex=min(1,4*10/max_title_length))
+      }
+      grab_grob() #outputs the graphics object to the list
+    })
+
+    draw.heatmaps(hmaps,names_datasets,names_sigs) #draws the heatmaps
+    # the following saves the file
+    grDevices::dev.copy(grDevices::pdf,file.path(out_dir,'sig_eval_bivariate_clustering_binarized_maps.pdf'),width=4*(length(names_datasets)),height=4*(length(names_sigs)))
+    if(grDevices::dev.cur()!=1){
+      g<- grDevices::dev.off() #closes graphics device
+    }  
+  }else{
+    cat(paste0('Binarized bi-clustering completed successfully. No binarized bi-clusters found among signature/dataset combinations.\n'),file=file)
+  }
   if(grDevices::dev.cur()!=1){
-    g<- grDevices::dev.off() #closes graphics device
-  }  
+      g<- grDevices::dev.off() #closes graphics device
+  }
   radar_plot_values #returns the values for the final plotting function
 }

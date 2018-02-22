@@ -100,7 +100,9 @@ eval_var_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix,names_datas
   cat('Mean vs SD graphs created successfully.\n', file=file) #output to log
 
   #now let's output the tables for mean vs sd for the gene signature, one for each dataset and signature considered
-  dir.create(file.path(out_dir,'mean_sd_tables'))
+  if(!dir.exists(file.path(out_dir,'mean_sd_tables'))){
+    dir.create(file.path(out_dir,'mean_sd_tables'))
+  }
   for(k in 1:length(names_sigs)){
     for (i in 1:length(names_datasets)){
       utils::write.table(gene_sig_mean_sd_table[[names_sigs[k]]][[names_datasets[i]]],file=file.path(out_dir,'mean_sd_tables', paste0('mean_sd_table_',names_sigs[k],'_',names_datasets[i],'.txt')),quote=F,sep='\t')

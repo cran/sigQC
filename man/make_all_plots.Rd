@@ -10,27 +10,27 @@ make_all_plots(gene_sigs_list, mRNA_expr_matrix, names_sigs = NULL,
   doNegativeControl = TRUE, numResampling = 50)
 }
 \arguments{
-\item{gene_sigs_list}{A list of genes representing the gene signature to be tested.}
+\item{gene_sigs_list}{A list of genes representing the gene signatures to be tested. Each element of this list is a k-by-1 character matrix of k genes, which comprise the gene signature. Genes must be annotated in the same way as the rows of the data matrix.}
 
-\item{mRNA_expr_matrix}{A list of expression matrices}
+\item{mRNA_expr_matrix}{A list of matrices of expression values for the datasets to be considered. One numeric matrix entry per dataset. The rows are to be labelled as the genes, all annotated in the same way, and columns are sample IDs. Expression values should be transformed/cleaned as needed prior to use in sigQC. We recommend normalisation, batch correction, and log-transformation prior to use.}
 
-\item{names_sigs}{The names of the gene signatures (e.g. Hypoxia, Invasiveness), one name per each signature in gene_sigs_list.}
+\item{names_sigs}{The names of the gene signatures (e.g. Hypoxia, Invasiveness), one name per each signature in gene_sigs_list. Corresponds to the names of the entries of the list.}
 
-\item{names_datasets}{The names of the different datasets contained in mRNA_expr_matrix}
+\item{names_datasets}{The names of the different datasets contained in mRNA_expr_matrix. Corresponds to the names of the entries of the list.}
 
-\item{covariates}{A list containing a sub-list of 'annotations' and 'colors' which contains the annotation matrix for the given dataset and the associated colours with which to plot in the expression heatmap}
+\item{covariates}{A list containing a sub-list of 'annotations' and 'colors' which contains the annotation matrix for the given dataset and the associated colours with which to plot in the expression heatmap. This is in the same form as used by the ComplexHeatmap package.}
 
-\item{thresholds}{A list of thresholds to be considered for each data set, default is median of the data set. A gene is considered expressed if above the threshold, non-expressed otherwise. One threshold per dataset, in the same order as the dataset list.}
+\item{thresholds}{A list of expression thresholds to be considered for each data set, default is median of the data set. A gene is considered expressed if above the threshold, non-expressed otherwise. One threshold per dataset, in the same order as the dataset list. Note that this is only used for the reporting of the genes showing supra-threshold expression across each dataset.}
 
-\item{out_dir}{A path to the directory where the resulting output files are written}
+\item{out_dir}{A path to the directory where the resulting output files are written.}
 
-\item{showResults}{Tells if open dialog boxes showing the computed results. Default is FALSE}
+\item{showResults}{Tells if open dialog boxes showing the computed results. Default is FALSE.}
 
-\item{origin}{Tells if datasets have come from different labs/experiments/machines. Is a vector of characters, with same character representing same origin. Default is assumption that all datasets come from the same source.}
+\item{origin}{Tells if datasets have come from different labs/experiments/machines. Is a vector of characters, with same character representing same origin. Default is assumption that all datasets come from the same source. Used in the correction of batch effects during the RankProduct computation for poorly auto-correlated signature genes. Only to be used if multiple datasets are present.}
 
 \item{doNegativeControl}{Logical, tells the function if negative controls must be computed. TRUE by default.}
 
-\item{numResampling}{Number of re-samplings (50 by default) during negative controls}
+\item{numResampling}{Number of bootstrap re-samplings of random gene signatures of the same length (50 by default) from which to compute null distribution of each metric.}
 }
 \description{
 Makes all the plots for the quality control of the list(s) of genes.

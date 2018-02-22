@@ -16,6 +16,9 @@ make_radar_chart_loc <- function(radar_plot_values,showResults = FALSE,names_sig
   radar_plot_mat <- c()
   colours_array <- grDevices::rainbow(length(names_datasets))
   # first we need to flatten this list into a matrix that we can use with the radar plot plotting function
+  # grDevices::dev.new()
+
+  # graphics::par(cex.main=0.8,cex.lab = 0.8,oma=c(4,2,2,2),mar=c(4,4,4,4)) #set graphics parameters
 
   all_metrics <- c('sd_median_ratio','abs_skewness_ratio','prop_top_10_percent','prop_top_25_percent',
     'prop_top_50_percent','coeff_of_var_ratio','med_prop_na','med_prop_above_med',
@@ -63,6 +66,7 @@ make_radar_chart_loc <- function(radar_plot_values,showResults = FALSE,names_sig
   }
 
   #for calculating the legend box size
+  graphics::plot.new()
   l <-  graphics::legend(0.05,0, legend=legend_labels, seg.len=2, title="Datasets",lty=legend_lty,
                    bty="n" ,lwd=1, col=legend_cols,cex=min(0.8,3*10/max_title_length),plot=F)
 
@@ -93,7 +97,7 @@ make_radar_chart_loc <- function(radar_plot_values,showResults = FALSE,names_sig
   # graphics::par(omd=c(0, 1-w, 0, 1 ),xpd=T)
   orig_par <- graphics::par('mai')
   
-    graphics::par(xpd=TRUE,mai=(graphics::par('mai') + c(0,0,0,padding)))
+  graphics::par(xpd=TRUE,mai=(graphics::par('mai') + c(0,0,0,padding)))
 
   # compute the area ratios
   areas <- c()
@@ -119,11 +123,11 @@ make_radar_chart_loc <- function(radar_plot_values,showResults = FALSE,names_sig
                    cglcol = 'grey',axislabcol = 'black',
                    caxislabels = seq(0,1,length.out = 5),
                    cglty = 1,cglwd = 1,calcex = 0.5,
-                   vlabels = c('Relative\nMed. SD','Skewness',expression(sigma["" >= "10%" ]),expression(sigma["" >= "25%" ]),expression(sigma["" >= "50%" ]),'Coef. of Var.',
+                   vlabels = c('Relative\nMed. SD','Skewness',expression(sigma["">="10%"]),expression(sigma["">="25%"]),expression(sigma["">="50%"]),'Coef. of Var.',
                                'Non-NA\nProp.','Prop.\nExpressed',
-                               'Autocor.',expression(rho["Mean,Med" ]),
-                               expression(rho["PCA1,Med" ]),expression(rho["Mean,PCA1" ]), expression(sigma["PCA1" ]),
-                               expression(rho["Med,Z-Med" ])),
+                               'Autocor.',expression(rho["Mean,Med"]),
+                               expression(rho["PCA1,Med"]),expression(rho["Mean,PCA1"]), expression(sigma["PCA1"]),
+                               expression(rho["Med,Z-Med"])),
                    vlcex = 0.6,
                    title='Signature Summary',
                    pty=16, plty=legend_lty,pcol=legend_cols,plwd = 2)
@@ -146,7 +150,9 @@ make_radar_chart_loc <- function(radar_plot_values,showResults = FALSE,names_sig
   }
 
   #output the radarchart table to file
-  dir.create(file.path(out_dir,'radarchart_table'))
+  if(!dir.exists(file.path(out_dir,'radarchart_table'))){
+     dir.create(file.path(out_dir,'radarchart_table')) 
+  }
 
   #the following creates the radarplot rownames
   radarplot_rownames <- c()

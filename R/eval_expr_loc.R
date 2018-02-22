@@ -161,7 +161,9 @@ eval_expr_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix,names_data
   cat('Expression and density graphs created successfully.\n', file=file)
 
   #here we calculate the outputs again just to put in text files
-  dir.create(file.path(out_dir,'expression_tables'))
+  if(!dir.exists(file.path(out_dir,'expression_tables'))){
+    dir.create(file.path(out_dir,'expression_tables'))
+  }
 
   for (k in 1:length(names_sigs)){
     gene_sig <- gene_sigs_list[[names_sigs[k]]] #load signature

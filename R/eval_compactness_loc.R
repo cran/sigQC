@@ -57,7 +57,9 @@ eval_compactness_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, na
     # print(cor(t(data.matrix[inter,]),method='spearman'))
     # print(autocors)
     #let's output this to a file---
-    dir.create(file.path(out_dir,'autocorrelation_matrices'))
+    if(!dir.exists(file.path(out_dir,'autocorrelation_matrices'))){
+      dir.create(file.path(out_dir,'autocorrelation_matrices'))
+    }
     utils::write.table(autocors,file=file.path(out_dir,'autocorrelation_matrices', paste0('autocorrelation_matrix_',names_sigs[sig_ind],'_',names_datasets[dataset_ind],'.txt')),quote=F,sep='\t')
 
 
@@ -242,9 +244,11 @@ eval_compactness_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, na
       #the following will calcualte the full output table for the rank prod and save it sorted two ways
       table_rank_prod <- cbind(RP.out$pfp,RP.out$pval,RP.out$RPs)
       colnames(table_rank_prod) <- c(paste0("pfp_",colnames(RP.out$pfp)),paste0('p_val',colnames(RP.out$pval)),paste0("Rank_Product_",colnames(RP.out$RPs)))
-      dir.create(file.path(out_dir,'rank_prod')) #create the dir
-      utils::write.csv(table_rank_prod[order(table_rank_prod[,1]),],file=file.path(out_dir, 'rank_prod',paste0('rank_product_table1_',names_sigs[k],'.txt')),quote=F,sep='\t')
-      utils::write.csv(table_rank_prod[order(table_rank_prod[,2]),],file=file.path(out_dir, 'rank_prod',paste0('rank_product_table2_',names_sigs[k],'.txt')),quote=F,sep='\t')
+      if(!dir.exists(file.path(out_dir,'rank_prod'))){
+        dir.create(file.path(out_dir,'rank_prod')) #create the dir
+      }
+      utils::write.csv(table_rank_prod[order(table_rank_prod[,1]),],file=file.path(out_dir, 'rank_prod',paste0('rank_product_table1_',names_sigs[k],'.txt')),quote=F)
+      utils::write.csv(table_rank_prod[order(table_rank_prod[,2]),],file=file.path(out_dir, 'rank_prod',paste0('rank_product_table2_',names_sigs[k],'.txt')),quote=F)
 
       # #compute the tables of up and down regulated genes
       # table_rank_prod <- RankProd::topGene(RP.out,cutoff=0.05,method="pfp",logged=T, gene.names=rownames(overall_rank_mat))#intersect(gene_sig[,1],rownames(mRNA_expr_matrix[[names_datasets[i]]])))

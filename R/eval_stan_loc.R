@@ -38,7 +38,9 @@ eval_stan_loc <- function(gene_sigs_list, names_sigs,mRNA_expr_matrix, names_dat
   graphics::par(mfrow=c(num_rows,num_cols),oma=c(2,2,2,2),mar=c(4,4,4,4))
 
   #create dir for output text files 
-  dir.create(file.path(out_dir,'standardisation_tables'))
+  if(!dir.exists(file.path(out_dir,'standardisation_tables'))){
+    dir.create(file.path(out_dir,'standardisation_tables'))
+  }
 
   for(k in 1:length(names_sigs)){ 
     gene_sig <- gene_sigs_list[[names_sigs[k]]] #load in the gene signature

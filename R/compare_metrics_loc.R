@@ -15,7 +15,10 @@
 
 compare_metrics_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, names_datasets, out_dir = '~',file=NULL,showResults = FALSE,radar_plot_values){
   # require(gplots)
-  dir.create(file.path(out_dir,'metrics_tables'))
+  if(!dir.exists(file.path(out_dir,'metrics_tables'))){
+      dir.create(file.path(out_dir,'metrics_tables'))
+  }
+  
   for(k in 1:length(names_sigs)){ 
     #for each signature we will make a separate file comparing the datasets
     gene_sig <- gene_sigs_list[[names_sigs[k]]] # load the gene signature
@@ -54,7 +57,7 @@ compare_metrics_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, nam
         
         },error=function(e){
           pca1_scores <<- NULL
-          cat(paste0("There was an error:  ",names_datasets[i]," ", names_sigs[k]," ", e,'\n'), file=file)
+          cat(paste0("There was an error when computing PCA1 score for:  ",names_datasets[i]," ", names_sigs[k]," ", e,'\n'), file=file)
 
      #     print(paste0("error: ", e))
       })
@@ -185,7 +188,258 @@ compare_metrics_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, nam
     if(grDevices::dev.cur()!=1){
         g <- grDevices::dev.off() # to reset the graphics pars to defaults
     }
-    }
+  }
+  
   cat('Metrics compared successfully.\n', file=file) #output to log
+  
+  #------------------------------------------------------------------------------------------------------------------
+
+  #next we use the mclust package, and compute the log-likelihoods of the various Gaussian mixture models for the scores
+  
+  mixture_model.out = file.path(out_dir, "mixture_model_out.txt")
+  mixture_model.con = file(mixture_model.out, open = "w") #open the output file
+
+  mixture_models <- list() #variable to store the mclust results
+
+  for(k in 1:length(names_sigs)){ 
+    mixture_models[[names_sigs[k]]] <- list()
+    gene_sig <- gene_sigs_list[[names_sigs[k]]] # load the gene signature
+    if(is.matrix(gene_sig)){gene_sig = as.vector(gene_sig);}
+    #set up canvas for plotting
+
+    if (showResults){
+      grDevices::dev.new()
+    }else{
+      grDevices::pdf(file.path(out_dir,paste0('sig_gaussian_mixture_model_',names_sigs[k],'.pdf')),width=3*length(names_datasets),height=10)
+    }
+
+    #find the max number of characters in the title
+    max_title_length <- -999
+    for( i in 1:length(names_datasets)){
+      if(max_title_length < nchar(paste0(names_datasets[i],' ',names_sigs[k]))){
+        max_title_length <- nchar(paste0(names_datasets[i],' ',names_sigs[k]))
+      }
+    }
+    #set up the canvas
+    graphics::par(mfcol = c(3,length(names_datasets)),mar=c(4,4,4,4))
+
+    for ( i in 1:length(names_datasets)){
+      # now we can loop over the datasets for the plot and generate the metrics for every dataset with this signature
+      data.matrix = mRNA_expr_matrix[[names_datasets[i]]] #load the data
+      data.matrix[!(is.finite(as.matrix(data.matrix)))] <- NA #ensure that the data is not infintie
+      inter = intersect(gene_sig,rownames(data.matrix)) #consider only the genes actually present in the data
+
+      med_scores <- apply(data.matrix[inter,],2,function(x){stats::median(stats::na.omit(x))}) #compute median
+      mean_scores <- apply(data.matrix[inter,],2,function(x){mean(stats::na.omit(x))}) #compute mean
+      pca1_scores <- NULL
+
+      tryCatch({
+        pca1_scores <- stats::prcomp(stats::na.omit(t(data.matrix[inter,])),retx=T) #compute PCA1
+        pca1_scores <- pca1_scores$x[,1] #gets the first component of PCA
+        },error=function(e){
+          pca1_scores <<- NULL
+          cat(paste0("There was an error when computing PCA1 score for:  ",names_datasets[i]," ", names_sigs[k]," ", e,'\n'), file=file)
+      })
+      
+
+      #the following are the mixture model variables that are going to be the outputs of the mclust function
+      mixture_models[[names_sigs[k]]][[names_datasets[i]]] <- list()
+      mixture_models[[names_sigs[k]]][[names_datasets[i]]][['median']] <- NULL
+      mixture_models[[names_sigs[k]]][[names_datasets[i]]][['mean']] <- NULL
+      mixture_models[[names_sigs[k]]][[names_datasets[i]]][['pca1']] <- NULL
+
+      if(length(med_scores) > 1){
+        max_clusters <- min(ceiling(sum(!is.na(med_scores)) / 2),10)
+        mixture_models[[names_sigs[k]]][[names_datasets[i]]][['median']] <- mclust::Mclust(med_scores,G=1:max_clusters)
+        mclust::plot.Mclust(x =  mixture_models[[names_sigs[k]]][[names_datasets[i]]][['median']], what='BIC',main='Median score')
+        # graphics::title(main='Median score')
+       graphics::mtext(side=3,line=2.5,paste0(names_datasets[i],' ',names_sigs[k]),cex=min(1,3*10/max_title_length)) #title
+
+        output_string <- paste0(names_sigs[k],' ',names_datasets[i],', Median score: There ')
+        if(mixture_models[[names_sigs[k]]][[names_datasets[i]]][['median']]$G==1){
+          output_string <- paste0(output_string,' is one component in the Gaussian mixture model. ')
+        }else{
+           output_string <- paste0(output_string,' are ',mixture_models[[names_sigs[k]]][[names_datasets[i]]][['median']]$G,' components in the Gaussian mixture model. ')
+        }
+
+        if(mixture_models[[names_sigs[k]]][[names_datasets[i]]][['median']]$modelName=='V'){
+          output_string <- paste0(output_string, 'Best model is Gaussian distributions with equal variance (E). ' )
+        }else if(mixture_models[[names_sigs[k]]][[names_datasets[i]]][['median']]$modelName=='E'){
+          output_string <- paste0(output_string, 'Best model is Gaussian distributions with variable variances (V). ' )
+        }else{
+          output_string <- paste0(output_string, 'Best model is univariate Gaussian distribution. ' )
+        }
+        output_string <- paste0(output_string,'\n')
+
+        cat(output_string,file=mixture_model.con)
+      }else{
+        graphics::plot.new()
+        graphics::mtext(side=3,line=2.5,paste0(names_datasets[i],' ',names_sigs[k]),cex=min(1,3*10/max_title_length)) #title
+
+        graphics::title(paste0('\n\nToo many NA values for Median in \n',names_datasets[i],' ',names_sigs[k]))#cex=min(1,4*10/max_title_length))
+      }
+
+      if(length(mean_scores) > 1){
+        max_clusters <- min(ceiling(sum(!is.na(mean_scores)) / 2),10)
+
+        mixture_models[[names_sigs[k]]][[names_datasets[i]]][['mean']] <- mclust::Mclust(med_scores,G=1:max_clusters)
+        mclust::plot.Mclust(x =  mixture_models[[names_sigs[k]]][[names_datasets[i]]][['mean']], what='BIC',main='Mean score')
+        # graphics::title(main='Mean score')
+        output_string <- paste0(names_sigs[k],' ',names_datasets[i],', Mean score: There ')
+        if(mixture_models[[names_sigs[k]]][[names_datasets[i]]][['mean']]$G==1){
+          output_string <- paste0(output_string,' is one component in the Gaussian mixture model. ')
+        }else{
+           output_string <- paste0(output_string,' are ',mixture_models[[names_sigs[k]]][[names_datasets[i]]][['mean']]$G,' components in the Gaussian mixture model. ')
+        }
+
+        if(mixture_models[[names_sigs[k]]][[names_datasets[i]]][['mean']]$modelName=='V'){
+          output_string <- paste0(output_string, 'Best model is Gaussian distributions with equal variance (E). ' )
+        }else if(mixture_models[[names_sigs[k]]][[names_datasets[i]]][['mean']]$modelName=='E'){
+          output_string <- paste0(output_string, 'Best model is Gaussian distributions with variable variances (V). ' )
+        }else{
+          output_string <- paste0(output_string, 'Best model is univariate Gaussian distribution. ' )
+        }
+        output_string <- paste0(output_string,'\n')
+
+        cat(output_string,file=mixture_model.con)
+      }else{
+        graphics::plot.new()
+        graphics::title(paste0('\n\nToo many NA values for Mean in \n',names_datasets[i],' ',names_sigs[k]))#cex=min(1,4*10/max_title_length))
+      }
+
+      if(length(pca1_scores) > 1){
+        max_clusters <- min(ceiling(sum(!is.na(pca1_scores)) / 2),10)
+
+        mixture_models[[names_sigs[k]]][[names_datasets[i]]][['pca1']] <- mclust::Mclust(pca1_scores,G=1:max_clusters)
+        mclust::plot.Mclust(x =  mixture_models[[names_sigs[k]]][[names_datasets[i]]][['pca1']], what='BIC',main='PCA1 score')
+        # graphics::title(main='PCA1 score')
+
+        output_string <- paste0(names_sigs[k],' ',names_datasets[i],', PCA1 score: There ')
+        if(mixture_models[[names_sigs[k]]][[names_datasets[i]]][['pca1']]$G==1){
+          output_string <- paste0(output_string,' is one component in the Gaussian mixture model. ')
+        }else{
+           output_string <- paste0(output_string,' are ',mixture_models[[names_sigs[k]]][[names_datasets[i]]][['pca1']]$G,' components in the Gaussian mixture model. ')
+        }
+
+        if(mixture_models[[names_sigs[k]]][[names_datasets[i]]][['pca1']]$modelName=='V'){
+          output_string <- paste0(output_string, 'Best model is Gaussian distributions with equal variance (E). ' )
+        }else if(mixture_models[[names_sigs[k]]][[names_datasets[i]]][['pca1']]$modelName=='E'){
+          output_string <- paste0(output_string, 'Best model is Gaussian distributions with variable variances (V). ' )
+        }else{
+          output_string <- paste0(output_string, 'Best model is univariate Gaussian distribution. ' )
+        }
+        output_string <- paste0(output_string,'\n')
+
+        cat(output_string,file=mixture_model.con)
+
+      }else{
+        graphics::plot.new()
+        graphics::title(paste0('\n\nToo many NA values for PCA1 in \n',names_datasets[i],' ',names_sigs[k]))#cex=min(1,4*10/max_title_length))
+      }
+    }
+     #saves file
+    if(showResults){
+      grDevices::dev.copy(grDevices::pdf,file.path(out_dir,paste0('sig_gaussian_mixture_model_',names_sigs[k],'.pdf')),width=3*length(names_datasets),height=10)
+    }
+    if(grDevices::dev.cur()!=1){
+        g <- grDevices::dev.off() # to reset the graphics pars to defaults
+    }
+  }
+ close(mixture_model.con)
+
+ save(mixture_models,file=file.path(out_dir, "mixture_models_raw_out.rda"))
+ cat('Gaussian mixture models computed successfully.\n', file=file) #output to log
+
+
+
+ #-------------next thing we will do with these scores is to plot the QQ plots to check for normality--------
+
+
+  for(k in 1:length(names_sigs)){ 
+    mixture_models[[names_sigs[k]]] <- list()
+    gene_sig <- gene_sigs_list[[names_sigs[k]]] # load the gene signature
+    if(is.matrix(gene_sig)){gene_sig = as.vector(gene_sig);}
+    #set up canvas for plotting
+
+    if (showResults){
+      grDevices::dev.new()
+    }else{
+      grDevices::pdf(file.path(out_dir,paste0('sig_qq_plots_',names_sigs[k],'.pdf')),width=3*length(names_datasets),height=10)
+    }
+
+    #find the max number of characters in the title
+    max_title_length <- -999
+    for( i in 1:length(names_datasets)){
+      if(max_title_length < nchar(paste0(names_datasets[i],' ',names_sigs[k]))){
+        max_title_length <- nchar(paste0(names_datasets[i],' ',names_sigs[k]))
+      }
+    }
+    #set up the canvas
+    graphics::par(mfcol = c(3,length(names_datasets)),mar=c(4,4,4,4))
+
+    for ( i in 1:length(names_datasets)){
+      # now we can loop over the datasets for the plot and generate the metrics for every dataset with this signature
+      data.matrix = mRNA_expr_matrix[[names_datasets[i]]] #load the data
+      data.matrix[!(is.finite(as.matrix(data.matrix)))] <- NA #ensure that the data is not infintie
+      inter = intersect(gene_sig,rownames(data.matrix)) #consider only the genes actually present in the data
+
+      med_scores <- apply(data.matrix[inter,],2,function(x){stats::median(stats::na.omit(x))}) #compute median
+      mean_scores <- apply(data.matrix[inter,],2,function(x){mean(stats::na.omit(x))}) #compute mean
+      pca1_scores <- NULL
+
+      tryCatch({
+        pca1_scores <- stats::prcomp(stats::na.omit(t(data.matrix[inter,])),retx=T) #compute PCA1
+        pca1_scores <- pca1_scores$x[,1] #gets the first component of PCA
+        },error=function(e){
+          pca1_scores <<- NULL
+          cat(paste0("There was an error when computing PCA1 score for:  ",names_datasets[i]," ", names_sigs[k]," ", e,'\n'), file=file)
+      })
+      
+
+      #the following are the mixture model variables that are going to be the outputs of the mclust function
+      mixture_models[[names_sigs[k]]][[names_datasets[i]]] <- list()
+      mixture_models[['median']] <- NULL
+      mixture_models[['mean']] <- NULL
+      mixture_models[['pca1']] <- NULL
+
+      if(length(med_scores) > 1){
+        stats::qqnorm(med_scores,plot.it=T,main='Median score')
+        graphics::mtext(side=3,line=2.5,paste0(names_datasets[i],' ',names_sigs[k]),cex=min(1,3*10/max_title_length)) #title
+
+      }else{
+        graphics::plot.new()
+        graphics::mtext(side=3,line=2.5,paste0(names_datasets[i],' ',names_sigs[k]),cex=min(1,3*10/max_title_length)) #title
+        graphics::title(paste0('\n\nToo many NA values for Median in \n',names_datasets[i],' ',names_sigs[k]))#cex=min(1,4*10/max_title_length))
+      }
+
+      if(length(mean_scores) > 1){
+        stats::qqnorm(mean_scores,plot.it=T,main='Mean score')
+
+      }else{
+        graphics::plot.new()
+        graphics::title(paste0('\n\nToo many NA values for Mean in \n',names_datasets[i],' ',names_sigs[k]))#cex=min(1,4*10/max_title_length))
+      }
+
+      if(length(pca1_scores) > 1){
+        stats::qqnorm(pca1_scores,plot.it=T,main='PCA1 score')
+
+      }else{
+        graphics::plot.new()
+        graphics::title(paste0('\n\nToo many NA values for PCA1 in \n',names_datasets[i],' ',names_sigs[k]))#cex=min(1,4*10/max_title_length))
+      }
+    }
+     #saves file
+    if(showResults){
+      grDevices::dev.copy(grDevices::pdf,file.path(out_dir,paste0('sig_qq_plots_',names_sigs[k],'.pdf')),width=3*length(names_datasets),height=10)
+    }
+    if(grDevices::dev.cur()!=1){
+        g <- grDevices::dev.off() # to reset the graphics pars to defaults
+    }
+  }
+ cat('QQ plots computed successfully.\n', file=file) #output to log
+
+ #-----------------------------------------------------------------------------------------------------------
+
+
   radar_plot_values #returns the radarplot values
 }
