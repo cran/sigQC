@@ -22,5 +22,5 @@ gene_sigs_list[['gene_sig_2']] = as.matrix(gene_sig_2)
 
 ## ------------------------------------------------------------------------
 showResults <- FALSE # we do not want to show the reuslts in R graphics windows
-doNegativeControl <- FALSE # we do not want to compute the negative controls for time purposes
+doNegativeControl <- FALSE # we do not want to compute the negative or permutation controls for time purposes
 

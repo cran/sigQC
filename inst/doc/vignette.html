@@ -12,7 +12,7 @@
 
 <meta name="author" content="Andrew Dhawan" />
 
-<meta name="date" content="2018-02-22" />
+<meta name="date" content="2018-03-13" />
 
 <title>sigQC: Gene Signature Quality Control</title>
 
@@ -70,14 +70,14 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore"><em>sigQC</em>: Gene Signature Quality Control</h1>
 <h4 class="author"><em>Andrew Dhawan</em></h4>
-<h4 class="date"><em>2018-02-22</em></h4>
+<h4 class="date"><em>2018-03-13</em></h4>
 
 
 
 <div id="introduction-and-sigqc-protocol-overview" class="section level1">
 <h1>Introduction and <em>sigQC</em> protocol overview</h1>
 <p>Inreasing amounts of genomic data mean that gene expression signatures are becoming critically important tools, poised to make a large impact on the diagnosis, management and prognosis for a number of diseases. For the purposes of this package, we define the term <strong>gene signature</strong> to mean: ‘a set of genes whose co-ordinated mRNA expression pattern is representative of a biological pathway, process, or phenotype, or clinical outcome.’</p>
-<p>A key issue with gene signatures of this nature is whether the expression of many genes can be summarised as a single score. In this package, we have automated the testing of a number of quality control metrics designed to test whether a single score, such as the median or mean, is an appropriate summary for the genes’ expression in a new dataset. Namely, the tools in this package enable the visualization of properties such as expression, variability, correlation, and comparison of methods of standardisation and scoring metrics.</p>
+<p>A key issue with gene signatures of this nature is whether the expression of many genes can be summarised as a single score, or whether multiple components are represented. In this package, we have automated the testing of a number of quality control metrics designed to test whether a single score, such as the median or mean, is an appropriate summary for the genes’ expression in a new dataset. Furthermore, the tools in this package enable the visualization of properties of a set of genes in a specific dataset, such as expression profile, variability, correlation, and comparison of methods of standardisation and scoring metrics for wider scope application.s</p>
 </div>
 <div id="package-installation" class="section level1">
 <h1>Package installation</h1>
@@ -98,8 +98,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><code>out_dir</code>: (Optional) A <strong>string</strong> specifying the location/name of the directory where outputs should be saved to</li>
 <li><code>showResults</code>: (Optional) A <strong>boolean</strong> specifying whether to display the output plots in R graphics windows or not</li>
 <li><code>origin</code>: (Optional) A character <strong>vector</strong> with each character describing the origin of the different datasets (used only in the computation of rank product statistic among autocorrelation matrices, to account for batch effects)</li>
-<li><code>doNegativeControl</code>: (Optional) A <strong>boolean</strong> specifying whether to do the negative control bootstrap resampling for each signature/dataset combination; note that if true, it will take significantly longer to run <em>sigQC</em></li>
-<li><code>numResampling</code>: (Optional) A <strong>numeric</strong> value specifying the number of bootstrapping runs to perform for the negative control</li>
+<li><code>doNegativeControl</code>: (Optional) A <strong>boolean</strong> specifying whether to do the negative and permutation control bootstrap resampling for each signature/dataset combination; note that if true, it will take significantly longer to run <em>sigQC</em></li>
+<li><code>numResampling</code>: (Optional) A <strong>numeric</strong> value specifying the number of bootstrapping runs to perform for the negative and permutation controls</li>
 </ul>
 </div>
 <div id="sample-workflow" class="section level1">
@@ -134,7 +134,7 @@ gene_sigs_list[[<span class="st">'gene_sig_1'</span>]] =<span class="st"> </span
 gene_sigs_list[[<span class="st">'gene_sig_2'</span>]] =<span class="st"> </span><span class="kw">as.matrix</span>(gene_sig_2)</code></pre></div>
 <p>We then set the other non-default valued input variables as needed for our analysis:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">showResults &lt;-<span class="st"> </span><span class="ot">FALSE</span> <span class="co"># we do not want to show the reuslts in R graphics windows</span>
-doNegativeControl &lt;-<span class="st"> </span><span class="ot">FALSE</span> <span class="co"># we do not want to compute the negative controls for time purposes</span></code></pre></div>
+doNegativeControl &lt;-<span class="st"> </span><span class="ot">FALSE</span> <span class="co"># we do not want to compute the negative or permutation controls for time purposes</span></code></pre></div>
 </div>
 <div id="step-3-running-of-sigqc-package" class="section level2">
 <h2>Step 3: Running of <em>sigQC</em> package</h2>
@@ -226,6 +226,7 @@ doNegativeControl &lt;-<span class="st"> </span><span class="ot">FALSE</span> <s
 <div id="step-11-optional-analysis-of-null-distributions-of-sigqc-metrics-resulting-in-longer-runtimes" class="section level2">
 <h2>Step 11: Optional: Analysis of null distributions of <em>sigQC</em> metrics (resulting in longer runtimes)</h2>
 <p>The file produced called ‘boxplot_metrics.pdf,’ (not produced in this example) in the negative_control subfolder of the results output shows the distributions of each of the fourteen summary metrics as reported in the radar plot for each signature and dataset combination. These distributions are generated for the number of repeats as specified by the input parameter numResampling, with default set to 50. The values for the gene signature and dataset combination in question are shown in red overlaid with the other points in grey, giving a sense of significance of each of the metrics.</p>
+<p>In addition, the file produced called ‘boxplot_metrics.pdf’ (not produced in this example) in the permutation_control subfolder of the results output shows the distributions of each of the fourteen summary metrics for each signature and dataset combination as well. These distributions are produced by permuting the gene labels for each sample, for each of the signature genes present in each dataset. The number of times this process is done is given by the input parameter numResampling, with default set to 50. As with the random gene signatures, the values for the gene signature and dataset combination in question are shown in red overlaid with the other points in grey. These metrics help provide an interpretation of the gene signature’s significance with respect to resampling among the same genes, to generate another set of null distributions that can be used in the evaluation of a gene signature.</p>
 </div>
 </div>
 <div id="metrics" class="section level1">

@@ -123,14 +123,27 @@ make_radar_chart_loc <- function(radar_plot_values,showResults = FALSE,names_sig
                    cglcol = 'grey',axislabcol = 'black',
                    caxislabels = seq(0,1,length.out = 5),
                    cglty = 1,cglwd = 1,calcex = 0.5,
-                   vlabels = c('Relative\nMed. SD','Skewness',expression(sigma["">="10%"]),expression(sigma["">="25%"]),expression(sigma["">="50%"]),'Coef. of Var.',
-                               'Non-NA\nProp.','Prop.\nExpressed',
+                   vlabels = c('Relative Med. SD','Skewness',expression(sigma["">="10%"]),expression(sigma["">="25%"]),expression(sigma["">="50%"]),'Coef. of Var.',
+                               'Non-NA Prop.','Prop. Expressed',
                                'Autocor.',expression(rho["Mean,Med"]),
                                expression(rho["PCA1,Med"]),expression(rho["Mean,PCA1"]), expression(sigma["PCA1"]),
                                expression(rho["Med,Z-Med"])),
                    vlcex = 0.6,
                    title='Signature Summary',
                    pty=16, plty=legend_lty,pcol=legend_cols,plwd = 2)
+  # fmsb::radarchart(as.data.frame(radar_plot_mat),
+  #                  maxmin = T,axistype = 1,
+  #                  cglcol = 'grey',axislabcol = 'black',
+  #                  caxislabels = seq(0,1,length.out = 5),
+  #                  cglty = 1,cglwd = 1,calcex = 0.5,
+  #                  vlabels = c('Relative\nMed. SD','Skewness',expression(sigma["">="10%"]),expression(sigma["">="25%"]),expression(sigma["">="50%"]),'Coef. of Var.',
+  #                              'Non-NA\nProp.','Prop.\nExpressed',
+  #                              'Autocor.',expression(rho["Mean,Med"]),
+  #                              expression(rho["PCA1,Med"]),expression(rho["Mean,PCA1"]), expression(sigma["PCA1"]),
+  #                              expression(rho["Med,Z-Med"])),
+  #                  vlcex = 0.6,
+  #                  title='Signature Summary',
+  #                  pty=16, plty=legend_lty,pcol=legend_cols,plwd = 2)
   legend_labels <- legend_labels[order(-areas)]
   legend_cols <- legend_cols[order(-areas)]
   legend_lty <- legend_lty[order(-areas)]
