@@ -54,7 +54,12 @@ compare_metrics_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, nam
 
       tryCatch({
         pca1_scores <- stats::prcomp(stats::na.omit(t(data.matrix[inter,])),retx=T) #compute PCA1
-        
+        output_mat <- pca1_scores$x
+        if(!is.null(colnames(data.matrix))){
+          row.names(output_mat) <- colnames(data.matrix)
+        }
+        utils::write.table(output_mat,file=file.path(out_dir,'metrics_tables', paste0('pca_loadings_',names_sigs[k],'_',names_datasets[i],'.txt')),quote=F,sep='\t')
+
         },error=function(e){
           pca1_scores <<- NULL
           cat(paste0("There was an error when computing PCA1 score for:  ",names_datasets[i]," ", names_sigs[k]," ", e,'\n'), file=file)
@@ -171,6 +176,12 @@ compare_metrics_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, nam
       if(length(pca1_scores) > 1){#(!is.null(pca1_scores)){
         #draws the scree plot
         bars_plot <- props_of_variances[1:min(10,length(props_of_variances))]
+        
+        output_mat <- as.matrix(props_of_variances)
+        colnames(output_mat) <- c('Proportion of variance')
+        row.names(output_mat) <- paste0('PCA ',as.character(1:dim(output_mat)[1]))
+        utils::write.table(output_mat,file=file.path(out_dir,'metrics_tables', paste0('pca_vs_var_',names_sigs[k],'_',names_datasets[i],'.txt')),quote=F,sep='\t')
+        
         graphics::barplot(bars_plot,main="PCA vs proportion\n of variance") #ylim= c(0,1),
         graphics::mtext(side = 1, line = 2, 'PCA',cex=0.8)
         radar_plot_values[[names_sigs[k]]][[names_datasets[i]]]['prop_pca1_var']<- bars_plot[1]
@@ -236,6 +247,7 @@ compare_metrics_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, nam
       tryCatch({
         pca1_scores <- stats::prcomp(stats::na.omit(t(data.matrix[inter,])),retx=T) #compute PCA1
         pca1_scores <- pca1_scores$x[,1] #gets the first component of PCA
+
         },error=function(e){
           pca1_scores <<- NULL
           cat(paste0("There was an error when computing PCA1 score for:  ",names_datasets[i]," ", names_sigs[k]," ", e,'\n'), file=file)

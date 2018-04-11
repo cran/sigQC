@@ -3,7 +3,7 @@
 #' Makes all the plots for the quality control of the list(s) of genes in a specified output directory (out_dir). Plots (PDFs) are made for all combinations of gene expression datasets and gene signatures inputted. For the purposes of this protocol, gene signatures are defined as sets of genes for which there is a coherent pattern of expression, in conjunction with a biological process or clinical outcome. The methodology is based on the sigQC protocol defined in the manuscript by Dhawan et al. at: https://www.biorxiv.org/content/early/2017/11/13/203729.
 #'
 #' @param gene_sigs_list A list object, for the gene signatures. The name reference for each list element should correspond to the name of the gene signature. This list consists of k-by-1 character matrices of k gene names, which comprise the gene signature. Genes must be annotated in the same manner as the rows of the data matrix; at least one gene name must be present in the rownames of the gene expression matrices for the signature to be evaluated on that dataset.
-#' @param mRNA_expr_matrix A list of matrices of expression values for the datasets to be considered. One numeric matrix entry per dataset. Name reference of each list entry should correspond to the name of the dataset. The rows are to be labelled as the genes, all annotated in the same way, and columns are sample IDs. Expression values should be normalised, batch-corrected, standardised, and log-transformed if needed, prior to use in sigQC. We recommend normalisation, batch correction, and log-transformation prior to use. Care must be taken to remove samples displaying a high proportion of NA values, especially for signature genes.
+#' @param mRNA_expr_matrix A list of matrices of expression values for the datasets to be considered, which must contain at least 2 samples per dataset. One numeric matrix entry per dataset. Name reference of each list entry should correspond to the name of the dataset. The rows are to be labelled as the genes, all annotated in the same way, and columns are sample IDs. Expression values should be normalised, batch-corrected, standardised, and log-transformed if needed, prior to use in sigQC. We recommend normalisation, batch correction, and log-transformation prior to use. Care must be taken to remove samples displaying a high proportion of NA values, especially for signature genes.
 #' @param names_sigs The names of the gene signatures (e.g. Hypoxia, Invasiveness), one name per each signature in gene_sigs_list. Corresponds to the names of the entries of the list.
 #' @param names_datasets The names of the different datasets contained in mRNA_expr_matrix. Corresponds to the names of the entries of the list.
 #' @param covariates A list containing a sub-list of 'annotations' and 'colors' which contains the annotation matrix for the given dataset and the associated colours with which to plot in the expression heatmap. This is in the same form as used by the ComplexHeatmap package. One sub-list per dataset is used, referenced by the same name as given by the dataset in the mRNA_expr_matrix list.
@@ -170,6 +170,30 @@ make_all_plots <- function(gene_sigs_list, mRNA_expr_matrix,names_sigs=NULL,name
         stop("No signatures contained at least 2 signature elements.") #if all signatures have been removed, then we have to stop
       }
 
+
+      datasets_to_remove_ind <- c()
+      #here is a check to have at least 2 samples in a dataset
+      for(i in 1:length(names_datasets)){
+        if(dim(as.matrix(mRNA_expr_matrix[[names_datasets[i]]]))[2] < 2){
+            datasets_to_remove_ind <- c(datasets_to_remove_ind,i)
+        }
+      }
+
+      datasets_to_remove_ind <- unique(datasets_to_remove_ind)
+      if(length(datasets_to_remove_ind) > 0) {
+        #now we do the removal
+        mRNA_expr_matrix[names_datasets[datasets_to_remove_ind]] <- NULL
+        #write it out that we've removed these datasets
+        for(j in 1:length(datasets_to_remove_ind)){
+          cat(paste0("Not enough samples (need at least 2 in each dataset) - dataset removed: ",names_datasets[datasets_to_remove_ind[j]]), file=log.con, sep="\n")
+        }
+        names_datasets <- names_datasets[-datasets_to_remove_ind]#NULL
+      }
+
+      if(length(names_datasets) == 0){
+        stop("No datasets expressed at least 2 samples.") #if all datasets have been removed, then we have to stop
+      }
+
       #first we must check that the genes of the signature are actually present in the datasets...
       datasets_to_remove_ind <- c()
       for (k in 1:length(names_sigs)){
@@ -184,6 +208,7 @@ make_all_plots <- function(gene_sigs_list, mRNA_expr_matrix,names_sigs=NULL,name
           }
         }
       }
+
       datasets_to_remove_ind <- unique(datasets_to_remove_ind)
       if(length(datasets_to_remove_ind) > 0) {
         #now we do the removal
@@ -198,6 +223,7 @@ make_all_plots <- function(gene_sigs_list, mRNA_expr_matrix,names_sigs=NULL,name
       if(length(names_datasets) == 0){
         stop("No datasets expressed at least 2 signature elements.") #if all datasets have been removed, then we have to stop
       }
+
 
       tryCatch(radar_plot_values <- eval_var_loc(gene_sigs_list,names_sigs, mRNA_expr_matrix,names_datasets,out_dir,file=log.con,showResults,radar_plot_values),
                error=function(err){
