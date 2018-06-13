@@ -38,7 +38,7 @@ Makes all the plots for the quality control of the list(s) of genes in a specifi
 \examples{
 library(sigQC)
 names = c("dataset1")
-data.matrix = replicate(10, rnorm(20))#random matrix - 10 genes x 20 samples
+data.matrix = replicate(10, rnorm(50))#random matrix - 50 genes x 10 samples
 mRNA_expr_matrix = list()
 mRNA_expr_matrix[["dataset1"]] = data.matrix
 row.names(mRNA_expr_matrix$dataset1) <- as.character(1:(dim(mRNA_expr_matrix$dataset1)[1]))
@@ -49,7 +49,7 @@ signature = "hypoxiaSig"
 gene_sig = c('1', '4', '5')#gene ids
 gene_sigs_list[[signature]] = as.matrix(gene_sig)
 names_sigs = c(signature)
-make_all_plots(gene_sigs_list = gene_sigs_list, mRNA_expr_matrix = mRNA_expr_matrix, 
-    doNegativeControl=FALSE, out_dir = tempdir(), showResults=FALSE)
+\donttest{make_all_plots(gene_sigs_list = gene_sigs_list, mRNA_expr_matrix = mRNA_expr_matrix, 
+    doNegativeControl=FALSE, out_dir = tempdir(), showResults=FALSE)}
 }
 \keyword{make_all_plots}

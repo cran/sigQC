@@ -1,8 +1,8 @@
-8b2b5e56934235a2c208acd82c743786 *DESCRIPTION
+0b5d940c80426beff097b9968a53b831 *DESCRIPTION
 864a8802a47d8acef75769d9d7db6607 *LICENSE
 aa016174dd4fe110829d5ba1f766b73f *NAMESPACE
 2dc868da6731493d6b2fc6400650d529 *R/boxplot.matrix2.R
-f204a459133e0859f2f3e3d423c211dd *R/compare_metrics_loc.R
+0b6431bb98df687ea0a627964eeb4506 *R/compare_metrics_loc.R
 7d24b1556ee37f33914f6401baec44d9 *R/compute_without_plots.R
 471811afeb02d088533904ae4e01254b *R/draw.heatmaps.R
 5373a09d5c7ffa74bade20118cde5281 *R/eval_compactness_loc.R
@@ -11,15 +11,15 @@ a61426d47c4aea7b168c874da5d0cb83 *R/eval_stan_loc.R
 d08a80beccd5522b82fb250df0db228f *R/eval_struct_loc.R
 df32e4da9484abed1f35dd1b7bf3408d *R/eval_var_loc.R
 273b1c0dfc889b1f2f139f381e7d19cc *R/grab_grob.R
-25061b4db5b7a8c4379073fc464578ab *R/make_all_plots.R
+e2f236ee27dd0ec8f2b256495a893661 *R/make_all_plots.R
 927fbb1cf3b1e38ea27e9cd9ad482feb *R/make_radar_chart_loc.R
 452f4f3bbbd89d000f59899c2ac01345 *R/sigsQcNegativeControl.R
 bcf003330c3b69b3c3615e842fab268d *README.md
-42f5a361e76f3fe1183d8e552b010f73 *build/vignette.rds
+fa54113905f2a56744c3781a73a18704 *build/vignette.rds
 0026c2fa841956236d3e8c134d6ac313 *inst/doc/vignette.R
-53a064a8e0b5efc9b68b8a66b0a38727 *inst/doc/vignette.Rmd
-775b1debb141402b5522b6653ef7bd05 *inst/doc/vignette.html
-75bd61af9f72396628f24a58e44def19 *man/make_all_plots.Rd
+32d6c5a39c7ecca6c0de920135a831a1 *inst/doc/vignette.Rmd
+086441f40b06dca6715eafdca63b20db *inst/doc/vignette.html
+208d76cc1f5c1fc7f87ab06da74caeeb *man/make_all_plots.Rd
 66dee832843f1f7c413a2392274a98ad *vignettes/sample_plots/sig_autocor_hmps.png
 c4c992e84c3ab6f4b43c5c71491639c7 *vignettes/sample_plots/sig_compare_metrics_gene_sig_1.png
 aec20930ca4caf8f1d975305481ff92d *vignettes/sample_plots/sig_eval_struct_clustering_dataset_1_gene_sig_1.png
@@ -29,4 +29,4 @@ aec20930ca4caf8f1d975305481ff92d *vignettes/sample_plots/sig_eval_struct_cluster
 f10705ad82ba39c6e04598002d5a5754 *vignettes/sample_plots/sig_qq_plots_gene_sig_1.png
 7d09782f74d4f2aca175181ca5d48486 *vignettes/sample_plots/sig_radarplot.png
 e70be0fa5948ad73258fbc51e6f50c02 *vignettes/sample_plots/sig_standardisation_comp.png
-53a064a8e0b5efc9b68b8a66b0a38727 *vignettes/vignette.Rmd
+32d6c5a39c7ecca6c0de920135a831a1 *vignettes/vignette.Rmd

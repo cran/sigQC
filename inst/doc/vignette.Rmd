@@ -120,6 +120,9 @@ Also shown in the fourth row of panels of these plots is a principal components 
 
 ![Plot of co-correlations and distributions of scoring metrics for gene signature 1 across datasets](sample_plots/sig_compare_metrics_gene_sig_1.png){ width=80% }
 
+In addition, loading the files called 'sig_compare_ES_metrics_*.pdf', we provide analogous co-correlation plots for each of GSVA, ssGSEA, and PLAGE scores, also showing the distribution of these scoring metrics. These scores are based on the techniques implemented by the GSVA R package, which is a dependency of _sigQC_, and the original package and publications by Hanzelman et al., 2013, Barbie et al., 2009, and Tomfohr et al., 2005 should be consulted for details of the calculation of these metrics. As these are enrichment socre-based metrics, these are best used in concert with the quality control for signatures based on enrichment analysis results, such as those from MSigDB.
+
+Also, loading the files called 'scoring_metrics_corr_*.pdf', one can observe the co-correlation between all of the six scoring metrics considered (mean, median, PCA1, GSVA, ssGSEA, and PLAGE) as a heatmap of Spearman correlation coefficients. Again, this is of particular use for signatures derived based on enrichment analyses.
 
 ### Analysis of normality of scoring metrics
 
@@ -256,6 +259,7 @@ The _sigQC_ package depends on having installed versions of the following packag
 * stats
 * utils
 * mclust
+* GSVA
 * Imagemagick
 
 # References
