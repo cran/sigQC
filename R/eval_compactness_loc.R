@@ -80,7 +80,7 @@ eval_compactness_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, na
                          na.color="grey",
                          labRow=rownames(autocors),
                          labCol=colnames(autocors),#gene_sig,
-                         main = paste0("\n\nAutocorrelation\n", names_datasets[[dataset_ind]] ,' ',names_sigs[[sig_ind]]),
+                         main = paste0("\n\nIntra-sig. Corr.\n", names_datasets[[dataset_ind]] ,' ',names_sigs[[sig_ind]]),
                          dendrogram = "col",
                          symbreaks = T,
                          Rowv = T,Colv=T ,key.xlab='Rho',key.ylab=NA,  key.title=NA,cexRow=max(min(0.5,(4*4/length(rownames(autocors)))),0.06),cexCol=max(min(0.5,(4*4/length(rownames(autocors)))),0.06),margins=c(1+(max(nchar(rownames(autocors)))/2),1+ (max(nchar(rownames(autocors)))/2)))
@@ -195,7 +195,7 @@ eval_compactness_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, na
   # draw the labels for the plot
   graphics::mtext(side = 2, line = 2, 'Density',cex=0.8)
   graphics::mtext(side = 1, line = 2, 'Rho',cex=0.8)
-  graphics::mtext(side = 3, line = 2,'Autocorrelation Density')
+  graphics::mtext(side = 3, line = 2,'Intra-sig. Corr. Density')
   # makes the legend for the plot (sets parameters)
   op <- graphics::par(cex=0.6)#,xpd=T)
 
@@ -263,7 +263,7 @@ eval_compactness_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, na
       #     utils::write.csv(table_rank_prod$Table2,file=file.path(out_dir, 'rank_prod',paste0('rank_product_table2_',names_sigs[k],'.txt')),quote=F,sep='\t')
       # }
 
-      cat("Autocorrelation rank product successfully computed.\n", file=file) #output to log file
+      cat("Intra-sig. corr. rank product successfully computed.\n", file=file) #output to log file
 
     #save the rank product plot
     if(showResults){
@@ -273,7 +273,7 @@ eval_compactness_loc <- function(gene_sigs_list,names_sigs, mRNA_expr_matrix, na
         g <- grDevices::dev.off() # to reset the graphics pars to defaults
     }
    }
-  cat("Autocorrelation metrics successfully computed.\n", file=file) #output to log file
+  cat("Intra-sig. corr. metrics successfully computed.\n", file=file) #output to log file
 
   }else{
       cat("Rank product not computed as there is only one dataset.\n", file=file)
