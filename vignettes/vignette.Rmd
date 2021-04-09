@@ -20,6 +20,13 @@ To install the _sigQC_ package, run the following code:
 install.packages('sigQC')
 ```
 
+# Reference
+
+**Please cite _sigQC_ if you use it in any of your workflows:** 
+
+Dhawan, Andrew, Alessandro Barberis, Wei-Chen Cheng, Enric Domingo, Catharine West, Tim Maughan, Jacob G. Scott, Adrian L. Harris, and Francesca M. Buffa. ``Guidelines for using sigQC for systematic evaluation of gene signatures.'' _Nature protocols_ 14, no. 5 (2019): 1377-1400.
+
+
 # General overview
 
 The _sigQC_ package is designed to be a single function __make_all_plots()__, capable of customising outputs as needed for the user, based on the inputs provided.
@@ -223,7 +230,7 @@ The radarplot produced has 14 axes, each representative of one of the following 
 
 ## Imagemagick dependency
 Issues may be experienced if the 'ImageMagick' dependency is not installed on the user's system (particularly for Windows systems). 
-To install this dependency, please follow directions at: <http://imagemagick.org/script/download.php>.
+To install this dependency, please follow directions at: <https://imagemagick.org/script/download.php>.
 
 ## RStudio plot size issue
 There is a known issue with RStudio plot size being too small causing errors with the plots being produced, even if they are not displayed in RStudio. The error in this case will appear in the log file as: ```Error in graphics::plot.new(): figure margins too large```.
@@ -264,7 +271,7 @@ The _sigQC_ package depends on having installed versions of the following packag
 
 # References
 
-1. Dhawan, A., Barberis, A., Cheng, W.C., Domingo, E., West, C., Maughan, T., Scott, J., Harris, A.L. and Buffa, F.M., 2017. sigQC: A procedural approach for standardising the evaluation of gene signatures. _bioRxiv_, p.203729.
+1.  Dhawan, Andrew, Alessandro Barberis, Wei-Chen Cheng, Enric Domingo, Catharine West, Tim Maughan, Jacob G. Scott, Adrian L. Harris, and Francesca M. Buffa. ``Guidelines for using sigQC for systematic evaluation of gene signatures.'' _Nature protocols_ 14, no. 5 (2019): 1377-1400.
 
 <!-- ## Styles -->
 

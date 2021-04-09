@@ -1,4 +1,4 @@
-79c85ce7b2ba62d80facf2b8d94ee163 *DESCRIPTION
+9438647f60da0b0f67181fc38857d719 *DESCRIPTION
 e49f4652534af377a713df3d9dec60cb *LICENSE
 aa016174dd4fe110829d5ba1f766b73f *NAMESPACE
 2dc868da6731493d6b2fc6400650d529 *R/boxplot.matrix2.R
@@ -14,12 +14,13 @@ df32e4da9484abed1f35dd1b7bf3408d *R/eval_var_loc.R
 f576ff1e9c466df942cddaf87c50466b *R/make_all_plots.R
 beaca209f7cb0f69b648f70e0adbd806 *R/make_radar_chart_loc.R
 452f4f3bbbd89d000f59899c2ac01345 *R/sigsQcNegativeControl.R
-bcf003330c3b69b3c3615e842fab268d *README.md
-fa54113905f2a56744c3781a73a18704 *build/vignette.rds
-0026c2fa841956236d3e8c134d6ac313 *inst/doc/vignette.R
-0ad12903196c1399d7110ae33f41b3eb *inst/doc/vignette.Rmd
-5675f33c68965b247503ae9f8551c8f0 *inst/doc/vignette.html
-208d76cc1f5c1fc7f87ab06da74caeeb *man/make_all_plots.Rd
+5f78eaff19f5d13f36cbf26b91252c3d *README.md
+0e403bd93c1e8a761c227997204ccb8d *build/vignette.rds
+92ca639be81c1ce02349d109daabbb83 *inst/CITATION
+ba4b9afaa689b6571702fd7954e4fe22 *inst/doc/vignette.R
+19199f58c371a145fbe1be1c1c4f42cf *inst/doc/vignette.Rmd
+0792c6ad22a89ecf8577be6539c79c2b *inst/doc/vignette.html
+8fb266c5d4ead39d892bc5e53c876239 *man/make_all_plots.Rd
 66dee832843f1f7c413a2392274a98ad *vignettes/sample_plots/sig_autocor_hmps.png
 c4c992e84c3ab6f4b43c5c71491639c7 *vignettes/sample_plots/sig_compare_metrics_gene_sig_1.png
 aec20930ca4caf8f1d975305481ff92d *vignettes/sample_plots/sig_eval_struct_clustering_dataset_1_gene_sig_1.png
@@ -29,4 +30,4 @@ aec20930ca4caf8f1d975305481ff92d *vignettes/sample_plots/sig_eval_struct_cluster
 f10705ad82ba39c6e04598002d5a5754 *vignettes/sample_plots/sig_qq_plots_gene_sig_1.png
 7d09782f74d4f2aca175181ca5d48486 *vignettes/sample_plots/sig_radarplot.png
 e70be0fa5948ad73258fbc51e6f50c02 *vignettes/sample_plots/sig_standardisation_comp.png
-0ad12903196c1399d7110ae33f41b3eb *vignettes/vignette.Rmd
+19199f58c371a145fbe1be1c1c4f42cf *vignettes/vignette.Rmd
