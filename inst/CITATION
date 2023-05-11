@@ -1,7 +1,7 @@
 citHeader("To cite sigQC in publications use:")
 
-citEntry(
-  entry    = "Article",
+bibentry(
+  bibtype    = "Article",
   title    = "Guidelines for using sigQC for systematic evaluation of gene signatures",
   author   = "Dhawan, Andrew and Barberis, Alessandro and Cheng, Wei-Chen and Domingo, Enric and West, Catharine and Maughan, Tim and Scott, Jacob and Harris, Adrian L and Buffa, Francesca M",
   journal  = "Nature Protocols",
